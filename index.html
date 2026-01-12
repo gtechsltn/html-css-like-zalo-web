@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zalo Web Clone Full UI + Animation</title>
+<style>
+:root {
+  --primary: #0068ff;
+  --primary-light: #e5efff;
+  --bg: #f4f5f7;
+  --sidebar: #ffffff;
+  --chat-bg: #e5efff;
+  --radius: 12px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {margin:0; padding:0; box-sizing:border-box; font-family:var(--font);}
+
+body {
+  display: flex;
+  height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ===== SIDEBAR NAV ===== */
+.sidebar-nav {
+  width: 64px;
+  background: var(--sidebar);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0;
+  gap: 8px;
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  z-index: 10;
+}
+.main-tab {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #555;
+  transition: 0.2s;
+  position: relative;
+}
+.main-tab.active { background: var(--primary-light); color: var(--primary);}
+.main-tab:hover { background: #f0f2f5;}
+.main-tab[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 60px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* ===== MAIN CONTAINER ===== */
+.main-container {
+  display: flex;
+  margin-left: 64px; 
+  width: calc(100% - 64px);
+  height: 100%;
+}
+
+/* ===== CHAT LIST SIDEBAR ===== */
+.sidebar {
+  width: 260px;
+  background: var(--sidebar);
+  box-shadow: var(--shadow);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+.sidebar.hidden {width:0;}
+
+.sidebar-header {padding:16px; font-weight:bold; color:var(--primary);}
+.chat-item {padding:12px 16px; display:flex; gap:10px; cursor:pointer; border-radius: var(--radius); transition: background 0.2s;}
+.chat-item:hover {background:#f5f7fb;}
+.chat-item.active {background: var(--primary-light);}
+.avatar {width:40px; height:40px; background:var(--primary); border-radius:50%;}
+
+/* ===== CHAT WINDOW ===== */
+.chat-window {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  transition: all 0.3s ease;
+}
+.chat-header {background:white; padding:14px 16px; box-shadow:var(--shadow); display:flex; justify-content:space-between; align-items:center; font-weight:600;}
+.icon-btn {cursor:pointer; color:var(--primary); font-size:18px;}
+.chat-body {flex:1; padding:20px; background:var(--chat-bg); overflow-y:auto;}
+.message {background:white; padding:10px 14px; border-radius:var(--radius); margin-bottom:10px; max-width:60%; box-shadow:var(--shadow);}
+.message.me {background:var(--primary); color:white; margin-left:auto;}
+
+/* ===== INFO PANEL ===== */
+.info-panel {width:260px; background:white; box-shadow:var(--shadow); flex-shrink:0; transition: all 0.3s ease;}
+.info-panel.hidden {width:0; overflow:hidden;}
+.info-header {padding:16px; font-weight:600; border-bottom:1px solid #eee;}
+.info-content {padding:16px; font-size:14px;}
+.info-avatar {width:80px; height:80px; background:var(--primary); border-radius:50%; margin:0 auto 12px; cursor:pointer;}
+
+/* ===== MODAL ===== */
+.modal {position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:50;}
+.modal.active {display:flex;}
+.modal-box {background:white; padding:20px; border-radius:var(--radius); text-align:center; box-shadow:var(--shadow);}
+.modal-avatar {width:90px; height:90px; background:var(--primary); border-radius:50%; margin:0 auto 10px;}
+
+/* ===== FADE IN ANIMATION ===== */
+.fade-enter {opacity:0; transform: translateY(10px);}
+.fade-enter-active {opacity:1; transform:translateY(0); transition: all 0.3s ease;}
+.fade-exit {opacity:1; transform:translateY(0);}
+.fade-exit-active {opacity:0; transform: translateY(10px); transition: all 0.3s ease;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR NAV -->
+<div class="sidebar-nav">
+  <div class="main-tab active" data-tooltip="Chat" onclick="switchTab(0)">💬</div>
+  <div class="main-tab" data-tooltip="Danh bạ" onclick="switchTab(1)">👥</div>
+  <div class="main-tab" data-tooltip="Cloud" onclick="switchTab(2)">☁️</div>
+  <div class="main-tab" data-tooltip="Cài đặt" onclick="switchTab(3)">⚙️</div>
+</div>
+
+<!-- MAIN CONTAINER -->
+<div class="main-container">
+  <!-- CHAT LIST SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">Zalo</div>
+    <div id="chatContent"></div>
+  </div>
+
+  <!-- CHAT WINDOW -->
+  <div class="chat-window">
+    <div class="chat-header">
+      <span><span class="icon-btn" onclick="toggleSidebar()">☰</span> Nguyễn Văn A</span>
+      <span class="icon-btn" onclick="toggleInfo()">ⓘ</span>
+    </div>
+    <div class="chat-body">
+      <div class="message">Chào bạn 👋</div>
+      <div class="message me">Highlight & animation tab mượt như Zalo 😎</div>
+    </div>
+  </div>
+
+  <!-- INFO PANEL -->
+  <div class="info-panel hidden" id="infoPanel">
+    <div class="info-header">Thông tin hội thoại</div>
+    <div class="info-content">
+      <div class="info-avatar" onclick="openModal()"></div>
+      Nguyễn Văn A <br><br>
+      📞 0901 234 567 <br>
+      📍 Hà Nội
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="accountModal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-avatar"></div>
+    <b>Nguyễn Văn A</b><br>
+    0901 234 567<br><br>
+    <button onclick="closeModal()">Đóng</button>
+  </div>
+</div>
+
+<script>
+// Sidebar toggle
+function toggleSidebar(){document.getElementById("sidebar").classList.toggle("hidden");}
+function toggleInfo(){document.getElementById("infoPanel").classList.toggle("hidden");}
+
+// Modal
+function openModal(){document.getElementById("accountModal").classList.add("active");}
+function closeModal(e){if(!e||e.target.classList.contains("modal")){document.getElementById("accountModal").classList.remove("active");}}
+
+// Main-tab switch content with fade animation and active highlight
+const chatData = [
+  ["Nguyễn Văn A","Nguyễn Văn B","Nguyễn Văn C"],
+  ["Bạn bè 1","Bạn bè 2","Bạn bè 3"],
+  ["Cloud File 1","Cloud File 2"],
+  ["Cài đặt 1","Cài đặt 2"]
+];
+
+function switchTab(index){
+  // set active tab
+  document.querySelectorAll(".main-tab").forEach((tab,i)=>tab.classList.toggle("active", i===index));
+
+  // fade out existing content
+  const content = document.getElementById("chatContent");
+  content.classList.add('fade-exit-active');
+  setTimeout(()=>{
+    content.innerHTML="";
+    chatData[index].forEach(name=>{
+      const div = document.createElement("div");
+      div.className="chat-item";
+      div.innerHTML=`<div class="avatar"></div> ${name}`;
+      div.onclick = ()=>{
+        document.querySelectorAll(".chat-item").forEach(item=>item.classList.remove("active"));
+        div.classList.add("active");
+        openModal();
+      };
+      content.appendChild(div);
+    });
+    // fade in
+    content.classList.remove('fade-exit-active');
+    content.classList.add('fade-enter-active');
+    setTimeout(()=>content.classList.remove('fade-enter-active'),300);
+  },200);
+}
+// init first tab
+switchTab(0);
+</script>
+
+</body>
+</html>
